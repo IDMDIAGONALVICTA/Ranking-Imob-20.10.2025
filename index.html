@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Rankings - Imobiliárias e Viabilizadores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00512A 0%, #007C27 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00512A 0%, #007C27 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .filters-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            position: relative;
+        }
+
+        .filter-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #00512A;
+            font-size: 14px;
+        }
+
+        .multi-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .select-button:hover {
+            border-color: #007C27;
+            box-shadow: 0 0 0 3px rgba(0, 124, 39, 0.1);
+        }
+
+        .select-button.active {
+            border-color: #007C27;
+            background: #F0F05C;
+        }
+
+        .dropdown-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .select-button.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #007C27;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .dropdown-item:hover {
+            background: #F0F05C;
+        }
+
+        .dropdown-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007C27 0%, #00512A 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 124, 39, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .rankings-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .ranking-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .ranking-header {
+            padding: 20px;
+            color: white;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .ranking-imobiliarias .ranking-header {
+            background: linear-gradient(135deg, #00512A 0%, #007C27 100%);
+        }
+
+        .ranking-viabilizadores .ranking-header {
+            background: linear-gradient(135deg, #007C27 0%, #F0F05C 100%);
+            color: #00512A;
+        }
+
+        .ranking-content {
+            padding: 0;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s ease;
+        }
+
+        .ranking-item:hover {
+            background: #f8f9fa;
+        }
+
+        .ranking-position {
+            font-weight: bold;
+            font-size: 1.2em;
+            width: 50px;
+            text-align: center;
+        }
+
+        .ranking-position.gold { color: #f39c12; }
+        .ranking-position.silver { color: #95a5a6; }
+        .ranking-position.bronze { color: #cd7f32; }
+
+        .ranking-name {
+            flex: 1;
+            margin-left: 15px;
+            font-weight: 500;
+            color: #00512A;
+        }
+
+        .ranking-value {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #007C27;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .rankings-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .filter-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    
+        /* === KPI CARDS === */
+        .kpis-container{
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap:16px;
+            padding: 20px 30px 0 30px;
+            background:#f8f9fa;
+        }
+        .kpi-card{
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            padding: 18px 20px;
+            border: 2px solid #e9ecef;
+        }
+        .kpi-card .kpi-title{
+            font-size: 13px;
+            font-weight: 700;
+            color:#00512A;
+            letter-spacing:.3px;
+            margin-bottom:6px;
+        }
+        .kpi-card .kpi-value{
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.1;
+            color:#0f5132;
+        }
+        .kpi-card .kpi-sub{ font-size:12px; color:#6c757d; margin-top:6px; }
+        .kpi-card.kpi-2024{ border-image: linear-gradient(135deg, #6ECC01, #007C27) 1; border-width:2px; border-style:solid; }
+        .kpi-card.kpi-2025{ border-image: linear-gradient(135deg, #F0F5CD, #6ECC01) 1; border-width:2px; border-style:solid; }
+        .kpi-card.kpi-geral{ border-image: linear-gradient(135deg, #007C27, #00512A) 1; border-width:2px; border-style:solid; }
+        .kpi-card.kpi-growth{ border-image: linear-gradient(135deg, #F0F5CD, #007C27) 1; border-width:2px; border-style:solid; }
+        .kpi-positive .kpi-value{ color:#007C27; }
+        .kpi-negative .kpi-value{ color:#8B0000; }
+
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard de Rankings</h1>
+            <p>Ranking de Corretor e Gerente</p>
+        </div>
+
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Ano</label>
+                    <div class="multi-select">
+                        <div class="select-button" data-filter="ano">
+                            <span class="selected-text">Selecione os anos</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-content">
+                            <div class="dropdown-item">
+                                <input type="checkbox" value="2024" id="ano_2024">
+                                <label for="ano_2024">2024</label>
+                            </div>
+                            <div class="dropdown-item">
+                                <input type="checkbox" value="2025" id="ano_2025">
+                                <label for="ano_2025">2025</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Mês</label>
+                    <div class="multi-select">
+                        <div class="select-button" data-filter="mes">
+                            <span class="selected-text">Selecione os meses</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-content" id="dropdown-mes"></div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Linha</label>
+                    <div class="multi-select">
+                        <div class="select-button" data-filter="linha">
+                            <span class="selected-text">Selecione as linhas</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-content" id="dropdown-linha"></div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Empreendimento</label>
+                    <div class="multi-select">
+                        <div class="select-button" data-filter="empreendimento">
+                            <span class="selected-text">Selecione os empreendimentos</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-content" id="dropdown-empreendimento"></div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Time</label>
+                    <div class="multi-select">
+                        <div class="select-button" data-filter="time">
+                            <span class="selected-text">Selecione os times</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-content" id="dropdown-time"></div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Corretor</label>
+                    <div class="multi-select">
+                        <div class="select-button" data-filter="imobiliaria">
+                            <span class="selected-text">Selecione as imobiliárias</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-content" id="dropdown-imobiliaria"></div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Gerente</label>
+                    <div class="multi-select">
+                        <div class="select-button" data-filter="viabilizador">
+                            <span class="selected-text">Selecione os viabilizadores</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </div>
+                        <div class="dropdown-content" id="dropdown-viabilizador"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">🔍 Aplicar Filtros</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">🗑️ Limpar Filtros</button>
+            </div>
+        </div>
+
+        
+        <!-- KPIs -->
+        <div class="kpis-container">
+            <div class="kpi-card kpi-2024">
+                <div class="kpi-title">TOTAL 2024</div>
+                <div class="kpi-value" id="kpi-2024">—</div>
+            </div>
+            <div class="kpi-card kpi-2025">
+                <div class="kpi-title">TOTAL 2025</div>
+                <div class="kpi-value" id="kpi-2025">—</div>
+            </div>
+            <div class="kpi-card kpi-geral">
+                <div class="kpi-title">TOTAL GERAL</div>
+                <div class="kpi-value" id="kpi-geral">—</div>
+            </div>
+            <div class="kpi-card kpi-growth">
+                <div class="kpi-title">CRESCIMENTO 2024→2025</div>
+                <div class="kpi-value" id="kpi-growth">—</div>
+                <div class="kpi-sub" id="kpi-growth-abs"></div>
+            </div>
+        </div>
+<div class="rankings-container">
+            <div class="ranking-section ranking-imobiliarias">
+                <div class="ranking-header">
+                    🏢 Ranking de Corretor
+                </div>
+                <div class="ranking-content" id="ranking-imobiliarias-content">
+                    <div class="no-data">Selecione os filtros e clique em "Aplicar Filtros" para ver os rankings</div>
+                </div>
+            </div>
+
+            <div class="ranking-section ranking-viabilizadores">
+                <div class="ranking-header">
+                    👥 Ranking de Gerente
+                </div>
+                <div class="ranking-content" id="ranking-viabilizadores-content">
+                    <div class="no-data">Selecione os filtros e clique em "Aplicar Filtros" para ver os rankings</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados completos baseados na análise do arquivo Excel
+        let dadosOriginais = [{"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "JARDESON MILLER MOURAO TELES PEREIRA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 355002.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 332812.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 360678.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "0", "imobiliaria": "JOSE NETO RODRIGUES DO NASCIMENTO", "viabilizador": "4F CE - EQUIPE MARCOS PETROLA", "valor_2024": 0.0, "valor_2025": 358980.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 370963.99}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 362877.04}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 348725.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 348725.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA DE FATIMA PORTELA ROCHA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 346703.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 363750.06, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME RIANDRA", "imobiliaria": "EBMIRTES GUIMARAES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 354999.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 678000.0, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 0.0, "valor_2025": 360899.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 350000.0, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "JULIE KARINE PARISE GUNTHER", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 321000.0, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 699098.0}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "SHELYANNE MARI TELES BRITO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 213827.99}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 209500.0}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 597699.97, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "MARLEI BONFIM RICARTE DE LIMA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 199899.99, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 226087.36}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCO JUENILSON DUTRA DE LEMOS", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 199899.98, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 197899.98, "valor_2025": 0.0}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 213999.99}, {"mes": "Janeiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 208999.99}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "JOELYTON BEN HUR SILVA DO NASCIMENTO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 314000.0, "valor_2025": 0.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "ANA CRISTINA MENDES FEREIRA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 352501.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "0", "imobiliaria": "JULIE KARINE PARISE GUNTHER", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 355789.52, "valor_2025": 0.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 324000.0, "valor_2025": 0.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 348000.0, "valor_2025": 0.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "JULIE KARINE PARISE GUNTHER", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 342000.0, "valor_2025": 0.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARCELO FLORENTINO LIMA", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 355000.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 343186.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 352334.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 311785.16}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARCELO FLORENTINO LIMA", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 336648.0}, {"mes": "Fevereiro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 295783.28}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 213828.0}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 212328.0}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 209499.98, "valor_2025": 0.0}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 201500.0, "valor_2025": 0.0}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 220004.48}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "0", "imobiliaria": "ALAN HENRIQUE SILVA MARQUES", "viabilizador": "4F CE - EQUIPE MARCOS PETROLA", "valor_2024": 0.0, "valor_2025": 211999.98}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 216999.98}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "LETICIA DE JESUS ALVES", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 211999.98}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "VICTOR EMANUEL VIEIRA DA SILVA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 211999.98}, {"mes": "Fevereiro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 211999.98}, {"mes": "Março", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "JOAO VICTOR OLIVEIRA LEITE", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 348000.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 551000.01}, {"mes": "Março", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MATEUS ABREU MORAIS", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 333999.99}, {"mes": "Março", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 352000.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA DE FATIMA PORTELA ROCHA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 333999.99}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "JOELYTON BEN HUR SILVA DO NASCIMENTO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 647960.0, "valor_2025": 0.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "RUY FERNANDO BATISTA ZAMBON", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 298760.26, "valor_2025": 0.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 627500.0, "valor_2025": 0.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 375913.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARIA NATASHA DA SILVA SOUZA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 373000.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "TALISSON DA SILVA MARCELINO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 358621.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 727187.81}, {"mes": "Março", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Erik Pereira da Silva", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 340231.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "0", "imobiliaria": "JOELYTON BEN HUR SILVA DO NASCIMENTO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 330000.0, "valor_2025": 0.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "0", "imobiliaria": "MARIA DA CONCEIÇÃO MOURA RODRIGUES", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 330934.49, "valor_2025": 0.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 342923.4, "valor_2025": 0.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 384533.01}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 337637.2}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 330165.0}, {"mes": "Março", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "SILMARA DOS SANTOS COELHO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 350258.01}, {"mes": "Março", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 641332.64}, {"mes": "Março", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 672989.45}, {"mes": "Março", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "VICTOR EMANUEL VIEIRA DA SILVA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 316377.0}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "0", "imobiliaria": "Gutemberg de Queiroz Oliveira", "viabilizador": "4F CE - EQUIPE MARCOS PETROLA", "valor_2024": 0.0, "valor_2025": 213827.99}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 217980.01}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "KARINA SILVA XAVIER CAVALCANTE", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 213827.99}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "LORENA LUDMILA BARROS DO REGO SILVA", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 217980.0}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "MARCELO MENDES DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE JEANDER  MEDEIROS", "valor_2024": 0.0, "valor_2025": 217980.0}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 189500.0, "valor_2025": 0.0}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "DIEGO DA SILVA DE ALMEIDA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 215999.99, "valor_2025": 0.0}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCO JUENILSON DUTRA DE LEMOS", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 215999.98, "valor_2025": 0.0}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 213999.99, "valor_2025": 0.0}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 425000.11}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "MARCELO FLORENTINO LIMA", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 214999.99}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "VICTOR EMANUEL VIEIRA DA SILVA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 427908.58}, {"mes": "Março", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "CRISTHIAN MARIO MARQUES DE SOUZA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 214999.99}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "TALISSON DA SILVA MARCELINO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 362443.99}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 348387.99}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCA NATALIA SANTOS ALBUQUERQUE", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 358427.99}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "FRANCISCO HELIO CHAVES DE CARVALHO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 314700.1, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 320000.0, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "JOELYTON BEN HUR SILVA DO NASCIMENTO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 342700.0, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "RUY FERNANDO BATISTA ZAMBON", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 324700.0, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARIA NATASHA DA SILVA SOUZA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 329253.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "EDNA CAVALCANTE DE SOUSA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 336377.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "FRANCISCA DEBORA SOARES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 365297.8}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "NATALIA BARBOSA DE CARVALHO", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 358849.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 347734.06}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "YURI GABRIEL DA SILVA ICETY", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 343563.9}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 369640.01}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 345000.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "0", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 345728.62, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 309585.08, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 347385.21, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 343369.19, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 337345.18, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "MARIA DA CONCEIÇÃO MOURA RODRIGUES", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 343369.2, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 683965.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 337784.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 353036.0}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELISANGELA RODRIGUES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 319474.03}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "EDNA CAVALCANTE DE SOUSA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 331743.91}, {"mes": "Abril", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 357080.08}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "0", "imobiliaria": "JOSE NETO RODRIGUES DO NASCIMENTO", "viabilizador": "4F CE - EQUIPE MARCOS PETROLA", "valor_2024": 0.0, "valor_2025": 213827.99}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "ELISANGELA RODRIGUES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 213827.99}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 431808.1}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "YURI GABRIEL DA SILVA ICETY", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 213828.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "0", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 601499.99, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "0", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 189900.0, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 190500.0, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 209500.0, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 647999.97, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "LUIS PAULO DE OLIVEIRA LIMA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 211999.99, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "MARIA DE FATIMA PORTELA ROCHA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 222031.98}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "MARIA EDGLEUMA ARAUJO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 215999.99, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 213999.99, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 213999.99, "valor_2025": 0.0}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 222031.98}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "0", "imobiliaria": "Gutemberg de Queiroz Oliveira", "viabilizador": "4F CE - EQUIPE MARCOS PETROLA", "valor_2024": 0.0, "valor_2025": 214999.99}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 209999.99}, {"mes": "Abril", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "SHELYANNE MARI TELES BRITO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 215000.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 358817.99}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ANA CRISTINA MENDES FEREIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 492871.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "JOAO VICTOR OLIVEIRA LEITE", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 349747.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Henrique Damião Magalhães Andrade", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 341683.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 359825.99}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Raica da Silva Rodrigues Júnior", "viabilizador": "4F CE - EQUIPE JEANDER  MEDEIROS", "valor_2024": 0.0, "valor_2025": 349747.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 302744.76, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 326894.36, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "MARIA DE FATIMA PORTELA ROCHA", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 637744.76, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "Carlos Eduardo Gomes Sales", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 346474.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "EDNA CAVALCANTE DE SOUSA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 345941.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 350000.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 336197.56}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "KARLA ANDREA SOARES DE LAVOR", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 347414.75}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA DE FATIMA PORTELA ROCHA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 363868.91}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 359467.76}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "SHELYANNE MARI TELES BRITO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 355539.98}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 709998.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "AYSLEI JOANA DE SOUZA OLIVEIRA", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 343369.2, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 363855.03}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "FABIOLA SOUSA GUEDES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 351401.23, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "SILMARA DOS SANTOS COELHO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 363070.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "0", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE FABIANO MATSUZAKI", "valor_2024": 308000.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "0", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 318000.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 623000.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 330603.67}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "TEREZA MARIA DE OLIVEIRA VALENTE", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 363450.62}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "EVILASIO CAVALCANTE FREITAS", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 326000.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA EDGLEUMA ARAUJO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 318000.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 622000.0, "valor_2025": 321366.12}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "ELISANGELA RODRIGUES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "LETICIA DE JESUS ALVES", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "RAFAEL ASSUNÇÃO DA SILVA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 214828.0}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "KARINA SILVA XAVIER CAVALCANTE", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 201500.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 189500.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 214000.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 639999.88, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 216000.0, "valor_2025": 0.0}, {"mes": "Maio", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 222999.99}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 361697.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "JOAO VICTOR OLIVEIRA LEITE", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 355631.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 341500.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 299000.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 340611.99}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 298000.0, "valor_2025": 347870.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Joselanne Bezerra Lima", "viabilizador": "4F CE - EQUIPE JEANDER  MEDEIROS", "valor_2024": 0.0, "valor_2025": 386532.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 359517.32}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "SHELYANNE MARI TELES BRITO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 359517.31}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "0", "imobiliaria": "KARINA SILVA XAVIER CAVALCANTE", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 355000.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME RIANDRA", "imobiliaria": "IGOR BRITO LOBO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 674498.12, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 341405.25, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ANA CRISTINA MENDES FEREIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 376340.6}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 335308.73, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "MARCELO MENDES DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE JEANDER  MEDEIROS", "valor_2024": 0.0, "valor_2025": 399644.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 319051.33, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 314000.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 351716.21}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 322000.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCO NILTON GOMES PEREIRA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 345525.82}, {"mes": "Junho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 611000.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "ELISANGELA RODRIGUES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 214828.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "YURI GABRIEL DA SILVA ICETY", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 214827.99}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "0", "imobiliaria": "AYSLEI JOANA DE SOUZA OLIVEIRA", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 194880.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "0", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 188900.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "0", "imobiliaria": "Victor Helio da silva ramos", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 404102.98, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 607882.98, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "LUIS PAULO DE OLIVEIRA LIMA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 190788.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "MARIA EDGLEUMA ARAUJO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 205499.99, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 404800.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "JOSE WERBSON LIMA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 222000.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "LETICIA DE JESUS ALVES", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 404800.09}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 214673.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "Henrique Damião Magalhães Andrade", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 199900.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 246000.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "PEDRO DA SILVA PIMENTA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 0.0, "valor_2025": 203900.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME MAAX", "imobiliaria": "BRENDA GOMES DE SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 208900.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME MAAX", "imobiliaria": "LETICIA DE JESUS ALVES", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 208900.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 0.0, "valor_2025": 211900.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 217128.4, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "RAYANE NASCIMENTO DE SOUSA FERREIRA", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 222149.18, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "Victor Helio da silva ramos", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 446308.78, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 236222.0, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 224159.59, "valor_2025": 0.0}, {"mes": "Junho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 220138.79, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 335261.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Francisco Sérgio Alves Vieira", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 356661.01}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Joselanne Bezerra Lima", "viabilizador": "4F CE - EQUIPE JEANDER  MEDEIROS", "valor_2024": 0.0, "valor_2025": 352585.04}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 346471.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "Carlos Eduardo Gomes Sales", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 344757.96}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "DIANA DE SOUZA CHAVES", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 919843.2, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 311153.1, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 339482.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "EDNA CAVALCANTE DE SOUSA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 344758.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 342704.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "FRANCISCA DEBORA SOARES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 365146.8}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "JOSE WERBSON LIMA", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 368186.99}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 417463.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARCELO FLORENTINO LIMA", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 363175.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARCOS ANTONIO ALEVATO CESAREO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 369437.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "EDNA CAVALCANTE DE SOUSA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 351859.8}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "PEDRO DA SILVA PIMENTA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 357957.7}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME RIANDRA", "imobiliaria": "EVILASIO CAVALCANTE FREITAS", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 354999.02, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME RIANDRA", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 354999.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME MAAX", "imobiliaria": "FRANCISCO MARDLEY BERNARDO CAVALCANTE", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 336744.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME MAAX", "imobiliaria": "LETICIA DE JESUS ALVES", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 357900.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME MAAX", "imobiliaria": "MARIA IRIDAN AQUINO DE ALMEIDA", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 349999.99}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "MARILIA LEAO DE SOUSA BANDINI CATUNDA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 650050.0, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 348440.64, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "DIANA DE SOUZA CHAVES", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 325033.06, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "FRANCISCA DEBORA SOARES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 337852.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "NATALIA BARBOSA DE CARVALHO", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 315681.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 337852.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "TALISSON DA SILVA MARCELINO", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 337852.0}, {"mes": "Julho", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 347033.06, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "Gutemberg de Queiroz Oliveira", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 214074.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 190788.0, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 203012.99, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "JULIANA PEREIRA ANDRADE", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 201060.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "SILMARA DOS SANTOS COELHO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 214236.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME RIANDRA", "imobiliaria": "Gutemberg de Queiroz Oliveira", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 212081.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME RIANDRA", "imobiliaria": "SHELYANNE MARI TELES BRITO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 210070.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 446091.65, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "0", "imobiliaria": "Victor Helio da silva ramos", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 226087.36, "valor_2025": 0.0}, {"mes": "Julho", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 238253.5, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "JOAO VICTOR OLIVEIRA LEITE", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 360149.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 320000.0, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "Carlos Eduardo Gomes Sales", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 709621.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARCELO FLORENTINO LIMA", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 350000.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 684133.46, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 586083.82, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 311849.3, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 760886.54}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "YURI GABRIEL DA SILVA ICETY", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 356354.49}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 354999.0, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME RIANDRA", "imobiliaria": "SHELYANNE MARI TELES BRITO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 354999.0, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME MAAX", "imobiliaria": "Adrianna dos Santos Leite", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 355335.01}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME MAAX", "imobiliaria": "FRANCISCO MARDLEY BERNARDO CAVALCANTE", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 712683.86}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 349294.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME RIANDRA", "imobiliaria": "ANA PATRICIA VALE DOS SANTOS", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 340000.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE LUIS CARLOS", "valor_2024": 0.0, "valor_2025": 719732.12}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 348440.64, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "Carlos Eduardo Gomes Sales", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 370405.99}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 342291.68, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 315360.2, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 336142.74, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "MARILIA LEAO DE SOUSA BANDINI CATUNDA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 340242.04, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 392500.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "SHELYANNE MARI TELES BRITO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 325403.44, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 332493.95}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 295033.11, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 334212.37, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 216073.99}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 434323.99}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "0", "imobiliaria": "Victor Helio da silva ramos", "viabilizador": "4F CE - EQUIPE ALESSANDRA BARROS", "valor_2024": 204000.0, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "TALISSON DA SILVA MARCELINO", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 207000.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 203000.0, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 203000.0, "valor_2025": 0.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 205583.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 223788.16}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "CRISTHIAN MARIO MARQUES DE SOUZA", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 212688.27}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "Jonas Viriato Lima Neto", "viabilizador": "4F CE - EQUIPE JEANDER  MEDEIROS", "valor_2024": 0.0, "valor_2025": 201560.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "Jose Erialdo Cunha da Rocha", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 211900.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "Keiliane da Silva Andrade", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 211900.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME RIANDRA", "imobiliaria": "ANA ISABEL ALVES BASTOS BEZERRA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 223900.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 218900.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME RIANDRA", "imobiliaria": "Henrique Damião Magalhães Andrade", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 210370.0}, {"mes": "Agosto", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 220004.29, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCA NATALIA SANTOS ALBUQUERQUE", "viabilizador": "4F CE - EQUIPE LUIS CARLOS", "valor_2024": 0.0, "valor_2025": 373792.51}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Henrique Damião Magalhães Andrade", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 363426.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "ANA LUC GARCIA DA PONTE MELO", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 615266.0, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ITHALO SILVA ALMEIDA DE SOUSA", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 339235.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 303020.7, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "AIRTON MAIA PEREIRA JÚNIOR", "viabilizador": "4F CE - EQUIPE LUCAS FAÇANHA", "valor_2024": 0.0, "valor_2025": 345617.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "YURI GABRIEL DA SILVA ICETY", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 696587.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME RIANDRA", "imobiliaria": "Jonas Viriato Lima Neto", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 362155.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME RIANDRA", "imobiliaria": "SAMIELLE BARBOSA XAVIER", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 365233.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "ANA LUC GARCIA DA PONTE MELO", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 323702.9, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 341955.93, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 686458.03, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 347904.87, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "EVILASIO CAVALCANTE FREITAS", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 310080.75, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 353004.18, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "Henrique Damião Magalhães Andrade", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 365000.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "MICHELLI ANNE VASCONCELOS DA SILVA", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 366500.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 331737.53, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 299598.24, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "0", "imobiliaria": "Antonio Wellyngton Batista Lima", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 326028.22, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELISANGELA RODRIGUES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 344460.99}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARYANE MELO MAIA RAMOS BATISTA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 336025.63}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 314640.76, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 342160.77, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "PEDRO DA SILVA PIMENTA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 355005.7}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 394788.0, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 204000.0, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "KARINA SILVA XAVIER CAVALCANTE", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 204000.0, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "MARILIA LEAO DE SOUSA BANDINI CATUNDA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 203000.0, "valor_2025": 0.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "DAMILIS SARAIVA LEITÃO", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 205583.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "ITHALO SILVA ALMEIDA DE SOUSA", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 205583.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "JOSE WERBSON LIMA", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 206589.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 206589.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "FRANCISCA DEBORA SOARES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 491999.98}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "Maria Apolonia Cavalcante de Souza", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 218900.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "TALISSON DA SILVA MARCELINO", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 214900.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "TEREZA MARIA DE OLIVEIRA VALENTE", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 235000.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "THÁBATTA KHAROLLYNNY CAVALCANTE DUARTE", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 213900.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE LUIS CARLOS", "valor_2024": 0.0, "valor_2025": 241999.99}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME RIANDRA", "imobiliaria": "Jonas Viriato Lima Neto", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 216900.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME MAAX", "imobiliaria": "GERUSA CARVALHO LEITE", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 204900.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME MAAX", "imobiliaria": "THÁBATTA KHAROLLYNNY CAVALCANTE DUARTE", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 204900.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME RIANDRA", "imobiliaria": "João Paulo Neres dos Santos", "viabilizador": "4F CE - EQUIPE LUCAS FAÇANHA", "valor_2024": 0.0, "valor_2025": 206900.0}, {"mes": "Setembro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "AYSLEI JOANA DE SOUZA OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 220004.3, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELIAS FERREIRA NUNES", "viabilizador": "4F CE - EQUIPE ISABELLA QUEIROZ", "valor_2024": 0.0, "valor_2025": 352826.08}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "CRISTINA SALES DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 352825.99}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE CAROLINA GADELHA", "valor_2024": 0.0, "valor_2025": 365315.99}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "ATLÂNTICO CONDOMINIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA NEUSA DELMIRO DE SOUSA", "viabilizador": "4F CE - EQUIPE LUIS CARLOS", "valor_2024": 0.0, "valor_2025": 359070.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "FLAVIA GOUVEIA MARTINS", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 315615.9, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "0", "imobiliaria": "TIBERIO LUIS RAMOS BATISTA", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 315615.3, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 304520.7, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 315615.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 297460.5, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCO NILTON GOMES PEREIRA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 350000.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 703980.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "GERUSA CARVALHO LEITE", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 382654.56}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 728494.7}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 1415970.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARIA NATASHA DA SILVA SOUZA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 357990.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "ANA CRISTINA MENDES FEREIRA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 341990.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "KARINA SILVA XAVIER CAVALCANTE", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 351990.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARIA DE FATIMA PORTELA ROCHA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 355990.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARILIA LEAO DE SOUSA BANDINI CATUNDA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 699980.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 354999.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Mirante Condominio Clube", "time": "TIME RIANDRA", "imobiliaria": "MARIA DE FATIMA PORTELA ROCHA", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 340000.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "VISTA COSTEIRA CUMBUCO", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 352918.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "ANA LUC GARCIA DA PONTE MELO", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 330708.86, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "0", "imobiliaria": "LUANA DE LIMA CARVALHO", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 344769.47, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 333358.73, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 353004.14, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "AYSLEI JOANA DE SOUZA OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 339643.63, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 313643.68, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 324643.68, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 331394.63, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "Victor Helio da silva ramos", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 201800.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 208000.0, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME MAAX", "imobiliaria": "LETICIA DE JESUS ALVES", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 208595.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCA NATALIA SANTOS ALBUQUERQUE", "viabilizador": "4F CE - EQUIPE LUIS CARLOS", "valor_2024": 0.0, "valor_2025": 204572.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA EUSEBIO", "time": "TIME RIANDRA", "imobiliaria": "FRANCISCO NILTON GOMES PEREIRA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 208595.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "FRANCISCA DEBORA SOARES ARAUJO", "viabilizador": "4F CE - EQUIPE FELIPE MATIAS", "valor_2024": 0.0, "valor_2025": 456334.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 0.0, "valor_2025": 217900.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 0.0, "valor_2025": 215900.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ÍRIS", "time": "TIME RIANDRA", "imobiliaria": "AIRTON MAIA PEREIRA JÚNIOR", "viabilizador": "4F CE - EQUIPE LUCAS FAÇANHA", "valor_2024": 0.0, "valor_2025": 238999.99}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE ELIAS AMORIM SOUSA", "valor_2024": 0.0, "valor_2025": 210900.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA MARACANAÚ", "time": "TIME RIANDRA", "imobiliaria": "EDNA CAVALCANTE DE SOUSA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 0.0, "valor_2025": 210900.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "AYSLEI JOANA DE SOUZA OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 220004.3, "valor_2025": 0.0}, {"mes": "Outubro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "MARIA NATASHA DA SILVA SOUZA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 220004.29, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "CLEOGENES BEZERRA DA SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 655637.76, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "Belvedere Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 331633.83, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "0", "imobiliaria": "LUANA DE LIMA CARVALHO", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 346990.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "0", "imobiliaria": "WILLIAN AUGUSTO FERREIRA DE ARAUJO", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 348990.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARIA IRIDAN AQUINO DE ALMEIDA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 424000.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 366990.08, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "TALISSON DA SILVA MARCELINO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 344990.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "Victor Helio da silva ramos", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 376000.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 340990.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "ISRAEL DA SILVA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 373000.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "MARILIA LEAO DE SOUSA BANDINI CATUNDA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 352990.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 346338.47, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "ANA CRISTINA MENDES FEREIRA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 338407.38, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 318643.4, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 207000.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 209500.0, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "Victor Helio da silva ramos", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 207999.99, "valor_2025": 0.0}, {"mes": "Novembro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "FRANCISCA BRANDAO DA ROCHA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 220004.28, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "0", "imobiliaria": "KLEBER ROGERIO PEREIRA DE MELO", "viabilizador": "4F CE - EQUIPE KAIQUE FERMINO", "valor_2024": 343309.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 345322.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 383000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARCELO FLORENTINO LIMA", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 424000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARIA DA CONCEIÇÃO MAGALHAES VIEIRA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 349350.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARIA IRIDAN AQUINO DE ALMEIDA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 366000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "RENAN RODRIGUES SILVA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 685611.04, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "TALISSON DA SILVA MARCELINO", "viabilizador": "4F CE - EQUIPE GABRIEL CAVALCANTE", "valor_2024": 361810.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 347335.92, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "JÓQUEI CONDOMÍNIO CLUBE", "time": "TIME RIANDRA", "imobiliaria": "INGRID NOBRE URBANO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 355390.04, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 1047775.66, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "Vista Mar Condomínio Clube", "time": "TIME RIANDRA", "imobiliaria": "KARINA SILVA XAVIER CAVALCANTE", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 353385.73, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VISTA", "empreendimento": "VISTA PARQUE CONDOMÍNIO CLUBE", "time": "TIME MAAX", "imobiliaria": "MARA CINTHYA SILVA PATRICIO", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 339800.01, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME MAAX", "imobiliaria": "ELIAS AMORIM SOUSA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 217980.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA ACÁCIA", "time": "TIME RIANDRA", "imobiliaria": "RENAN GONDIM BARROSO", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 213827.99, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "Vitória Caucaia", "time": "TIME MAAX", "imobiliaria": "SHEILA MARIA MOREIRA NOGUEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 190788.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "Vitória Mondubim", "time": "TIME MAAX", "imobiliaria": "EVA DOS SANTOS CRUZ", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 220004.3, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "ADRIANA CASTELO BRANCO DE OLIVEIRA", "viabilizador": "4F CE - EQUIPE MARCIO MUNIZ", "valor_2024": 216000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME MAAX", "imobiliaria": "VICTOR EMANUEL VIEIRA DA SILVA", "viabilizador": "4F CE - EQUIPE JORDANA DIOGO", "valor_2024": 212000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "ANA CRISTINA MENDES FEREIRA", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 216000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "DHIEGO HENRIQUE COSTA QUEIROZ", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 214000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "FERNANDO MOURAO GONÇALVES", "viabilizador": "4F CE - EQUIPE JULIE GUNTHER", "valor_2024": 216000.0, "valor_2025": 0.0}, {"mes": "Dezembro", "linha": "VITÓRIA", "empreendimento": "VITÓRIA SENNA", "time": "TIME RIANDRA", "imobiliaria": "Nilton Cesar Moraes dos Anjos", "viabilizador": "4F CE - EQUIPE RIANDRA VERBENE", "valor_2024": 431999.99, "valor_2025": 0.0}];
+
+        // Função para carregar e processar os dados do Excel
+        async function carregarDados() {
+            console.log('Dados carregados diretamente:', dadosOriginais.length, 'registros');
+            preencherFiltros();
+        
+    try{ atualizarKpis(dadosOriginais); }catch(e){}
+}
+
+        // Remove a função usarDadosExemplo já que os dados estão carregados diretamente
+        
+        // Função para preencher os filtros com dados únicos
+        function preencherFiltros() {
+            const filtros = {
+                mes: new Set(),
+                linha: new Set(),
+                empreendimento: new Set(),
+                time: new Set(),
+                imobiliaria: new Set(),
+                viabilizador: new Set()
+            };
+
+            dadosOriginais.forEach(item => {
+                if (item.mes) filtros.mes.add(item.mes);
+                if (item.linha) filtros.linha.add(item.linha);
+                if (item.empreendimento) filtros.empreendimento.add(item.empreendimento);
+                if (item.time) filtros.time.add(item.time);
+                if (item.imobiliaria) filtros.imobiliaria.add(item.imobiliaria);
+                if (item.viabilizador) filtros.viabilizador.add(item.viabilizador);
+            });
+
+            // Preencher dropdowns
+            Object.keys(filtros).forEach(tipo => {
+                const dropdown = document.getElementById(`dropdown-${tipo}`);
+                if (dropdown) {
+                    dropdown.innerHTML = '';
+                    Array.from(filtros[tipo]).sort().forEach(valor => {
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
+                        item.innerHTML = `
+                            <input type="checkbox" value="${valor}" id="${tipo}_${valor.replace(/[^a-zA-Z0-9]/g, '_')}">
+                            <label for="${tipo}_${valor.replace(/[^a-zA-Z0-9]/g, '_')}">${valor}</label>
+                        `;
+                        dropdown.appendChild(item);
+                    });
+                }
+            });
+        }
+
+        // Gerenciamento dos dropdowns
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('select-button') || e.target.parentElement.classList.contains('select-button')) {
+                const button = e.target.classList.contains('select-button') ? e.target : e.target.parentElement;
+                const dropdown = button.nextElementSibling;
+                
+                // Fechar outros dropdowns
+                document.querySelectorAll('.dropdown-content.show').forEach(d => {
+                    if (d !== dropdown) {
+                        d.classList.remove('show');
+                        d.previousElementSibling.classList.remove('active');
+                    }
+                });
+                
+                // Toggle do dropdown atual
+                dropdown.classList.toggle('show');
+                button.classList.toggle('active');
+            } else if (!e.target.closest('.multi-select')) {
+                // Fechar todos os dropdowns se clicar fora
+                document.querySelectorAll('.dropdown-content.show').forEach(d => {
+                    d.classList.remove('show');
+                    d.previousElementSibling.classList.remove('active');
+                });
+            }
+        });
+
+        // Atualizar texto do botão quando checkboxes mudarem
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox' && e.target.closest('.dropdown-content')) {
+                const dropdown = e.target.closest('.dropdown-content');
+                const button = dropdown.previousElementSibling;
+                const filterType = button.getAttribute('data-filter');
+                const selectedText = button.querySelector('.selected-text');
+                
+                const checkedBoxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+                if (checkedBoxes.length === 0) {
+                    selectedText.textContent = `Selecione os ${filterType}s`;
+                } else if (checkedBoxes.length === 1) {
+                    selectedText.textContent = checkedBoxes[0].nextElementSibling.textContent;
+                } else {
+                    selectedText.textContent = `${checkedBoxes.length} ${filterType}s selecionados`;
+                }
+            }
+        });
+
+        // Função para obter valores selecionados de um filtro
+        function obterValoresSelecionados(filtro) {
+            const checkboxes = document.querySelectorAll(`#dropdown-${filtro} input[type="checkbox"]:checked`);
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        // Função para obter anos selecionados
+        function obterAnosSelecionados() {
+            const anos = [];
+            if (document.querySelector('#ano_2024') && document.querySelector('#ano_2024').checked) {
+                anos.push('2024');
+            }
+            if (document.querySelector('#ano_2025') && document.querySelector('#ano_2025').checked) {
+                anos.push('2025');
+            }
+            return anos.length > 0 ? anos : ['2024', '2025']; // Se nenhum selecionado, usar ambos
+        }
+
+        // Função para aplicar filtros e gerar rankings
+        function aplicarFiltros() {
+            const filtros = {
+                anos: obterAnosSelecionados(),
+                meses: obterValoresSelecionados('mes'),
+                linhas: obterValoresSelecionados('linha'),
+                empreendimentos: obterValoresSelecionados('empreendimento'),
+                times: obterValoresSelecionados('time'),
+                imobiliarias: obterValoresSelecionados('imobiliaria'),
+                viabilizadores: obterValoresSelecionados('viabilizador')
+            };
+
+            console.log('Filtros aplicados:', filtros);
+
+            // Filtrar dados
+            const dadosFiltrados = dadosOriginais.filter(item => {
+                const passaMes = filtros.meses.length === 0 || filtros.meses.includes(item.mes);
+                
+            try{ atualizarKpis(dadosFiltrados); }catch(e){}
+const passaLinha = filtros.linhas.length === 0 || filtros.linhas.includes(item.linha);
+                const passaEmpreendimento = filtros.empreendimentos.length === 0 || filtros.empreendimentos.includes(item.empreendimento);
+                const passaTime = filtros.times.length === 0 || filtros.times.includes(item.time) || (item.time === null && filtros.times.length === 0);
+                const passaImobiliaria = filtros.imobiliarias.length === 0 || filtros.imobiliarias.includes(item.imobiliaria);
+                const passaViabilizador = filtros.viabilizadores.length === 0 || filtros.viabilizadores.includes(item.viabilizador);
+                
+                return passaMes && passaLinha && passaEmpreendimento && passaTime && passaImobiliaria && passaViabilizador;
+            });
+
+            console.log('Dados filtrados:', dadosFiltrados.length, 'registros');
+
+            // Gerar rankings
+            gerarRankingImobiliarias(dadosFiltrados, filtros.anos);
+            gerarRankingViabilizadores(dadosFiltrados, filtros.anos);
+        }
+
+        // Função para gerar ranking de imobiliárias
+        function gerarRankingImobiliarias(dados, anos) {
+            const ranking = {};
+            
+            dados.forEach(item => {
+                if (!ranking[item.imobiliaria]) {
+                    ranking[item.imobiliaria] = 0;
+                }
+                
+                anos.forEach(ano => {
+                    if (ano === '2024') {
+                        ranking[item.imobiliaria] += item.valor_2024 || 0;
+                    } else if (ano === '2025') {
+                        ranking[item.imobiliaria] += item.valor_2025 || 0;
+                    }
+                });
+            });
+
+            // Converter para array e ordenar
+            const rankingArray = Object.entries(ranking)
+                .map(([nome, valor]) => ({ nome, valor }))
+                .filter(item => item.valor > 0)
+                .sort((a, b) => b.valor - a.valor);
+
+            // Renderizar ranking
+            renderizarRanking('ranking-imobiliarias-content', rankingArray);
+        }
+
+        // Função para gerar ranking de viabilizadores
+        function gerarRankingViabilizadores(dados, anos) {
+            const ranking = {};
+            
+            dados.forEach(item => {
+                if (!ranking[item.viabilizador]) {
+                    ranking[item.viabilizador] = 0;
+                }
+                
+                anos.forEach(ano => {
+                    if (ano === '2024') {
+                        ranking[item.viabilizador] += item.valor_2024 || 0;
+                    } else if (ano === '2025') {
+                        ranking[item.viabilizador] += item.valor_2025 || 0;
+                    }
+                });
+            });
+
+            // Converter para array e ordenar
+            const rankingArray = Object.entries(ranking)
+                .map(([nome, valor]) => ({ nome, valor }))
+                .filter(item => item.valor > 0)
+                .sort((a, b) => b.valor - a.valor);
+
+            // Renderizar ranking
+            renderizarRanking('ranking-viabilizadores-content', rankingArray);
+        }
+
+        // Função para renderizar ranking
+        function renderizarRanking(containerId, rankingArray) {
+            const container = document.getElementById(containerId);
+            
+            if (rankingArray.length === 0) {
+                container.innerHTML = '<div class="no-data">Nenhum dado encontrado para os filtros selecionados</div>';
+                return;
+            }
+
+            let html = '';
+            rankingArray.forEach((item, index) => {
+                const posicao = index + 1;
+                let classeposicao = '';
+                
+                if (posicao === 1) classeposicao = 'gold';
+                else if (posicao === 2) classeposicao = 'silver';
+                else if (posicao === 3) classeposicao = 'bronze';
+
+                html += `
+                    <div class="ranking-item">
+                        <div class="ranking-position ${classeposicao}">
+                            ${posicao}º
+                        </div>
+                        <div class="ranking-name">
+                            ${item.nome}
+                        </div>
+                        <div class="ranking-value">
+                            ${formatarValor(item.valor)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Função para formatar valores em milhões abreviado
+        function formatarValor(valor) {
+            if (valor >= 1000000) {
+                const valorEmMilhoes = valor / 1000000;
+                return `R$ ${valorEmMilhoes.toFixed(1)}M`;
+            } else if (valor >= 1000) {
+                const valorEmMil = valor / 1000;
+                return `R$ ${valorEmMil.toFixed(0)}K`;
+            } else {
+                return `R$ ${valor.toFixed(0)}`;
+            }
+        }
+
+        // Função para limpar todos os filtros
+        function limparFiltros() {
+            try{ atualizarKpis(dadosOriginais); }catch(e){}
+    // Limpar todos os checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+
+            // Resetar textos dos botões
+            document.querySelectorAll('.selected-text').forEach(text => {
+                const filterType = text.closest('.multi-select').querySelector('.select-button').getAttribute('data-filter');
+                if (filterType === 'ano') {
+                    text.textContent = 'Selecione os anos';
+                } else {
+                    text.textContent = `Selecione os ${filterType}s`;
+                }
+            });
+
+            // Limpar rankings
+            document.getElementById('ranking-imobiliarias-content').innerHTML = 
+                '<div class="no-data">Selecione os filtros e clique em "Aplicar Filtros" para ver os rankings</div>';
+            document.getElementById('ranking-viabilizadores-content').innerHTML = 
+                '<div class="no-data">Selecione os filtros e clique em "Aplicar Filtros" para ver os rankings</div>';
+
+            // Fechar todos os dropdowns
+            document.querySelectorAll('.dropdown-content.show').forEach(d => {
+                d.classList.remove('show');
+                d.previousElementSibling.classList.remove('active');
+            });
+        }
+
+        // Inicializar aplicação quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarDados();
+        });
+    
+    function atualizarKpis(dados){
+        try{
+            const total2024 = (dados||[]).reduce((s,x)=> s + (Number(x.valor_2024)||0), 0);
+            const total2025 = (dados||[]).reduce((s,x)=> s + (Number(x.valor_2025)||0), 0);
+            const el24 = document.getElementById('kpi-2024');
+            const el25 = document.getElementById('kpi-2025');
+            const elG  = document.getElementById('kpi-geral');
+            if (el24) el24.textContent = formatarValor(total2024);
+            if (el25) el25.textContent = formatarValor(total2025);
+            if (elG)  elG.textContent  = formatarValor(total2024 + total2025);
+            // crescimento
+            const growthEl=document.getElementById('kpi-growth');
+            const growthAbs=document.getElementById('kpi-growth-abs');
+            if (growthEl){
+                if (total2024>0){
+                    const delta = total2025 - total2024;
+                    const pct = (delta/total2024)*100;
+                    growthEl.textContent = (pct>=0? '▲ ' : '▼ ') + Math.abs(pct).toFixed(1) + '%';
+                    if (growthAbs) growthAbs.textContent = (delta>=0? '+' : '-') + (delta>=0? formatarValor(delta) : formatarValor(Math.abs(delta)));
+                    const card = growthEl.closest('.kpi-card');
+                    if (card){
+                        card.classList.remove('kpi-positive','kpi-negative');
+                        card.classList.add(delta>=0 ? 'kpi-positive' : 'kpi-negative');
+                    }
+                } else {
+                    growthEl.textContent = '—';
+                    if (growthAbs) growthAbs.textContent = '';
+                }
+            }
+        }catch(e){ console.error('Erro KPIs', e); }
+    }
+
+</script>
+
+<script>
+// --- Patch: tornar KPIs reativos aos filtros (sem alterar layout existente) ---
+(function(){'use strict';
+  function obterAnosSelecionados(){
+    const anos = [];
+    const a24 = document.querySelector('#ano_2024');
+    const a25 = document.querySelector('#ano_2025');
+    if (a24 && a24.checked) anos.push('2024');
+    if (a25 && a25.checked) anos.push('2025');
+    return anos;
+  }
+  function obterValoresSelecionados(filtro){
+    const sel = document.querySelectorAll('#dropdown-' + filtro + ' input[type="checkbox"]:checked');
+    return Array.from(sel).map(cb => cb.value);
+  }
+  function somaPorAnos(item, anos){
+    const use = (anos && anos.length) ? anos : ['2024','2025'];
+    let s = 0;
+    if (use.includes('2024')) s += Number(item.valor_2024)||0;
+    if (use.includes('2025')) s += Number(item.valor_2025)||0;
+    return s;
+  }
+  function filtrarDados(base){
+    try{
+      const anos = obterAnosSelecionados();
+      const filtros = {
+        meses: obterValoresSelecionados('mes'),
+        linhas: obterValoresSelecionados('linha'),
+        empreendimentos: obterValoresSelecionados('empreendimento'),
+        times: obterValoresSelecionados('time'),
+        imobiliarias: obterValoresSelecionados('imobiliaria'),
+        viabilizadores: obterValoresSelecionados('viabilizador')
+      };
+      return (base||[]).filter(it => {
+        const mes = (it.mes??'—'), lin=(it.linha??'—'), emp=(it.empreendimento??'—');
+        const tim=(it.time??'—'), imo=(it.imobiliaria??'—'), via=(it.viabilizador??'—');
+        const okAno = (anos.length===0) || (somaPorAnos(it, anos) > 0);
+        const okMes = !filtros.meses.length || filtros.meses.includes(mes);
+        const okLin = !filtros.linhas.length || filtros.linhas.includes(lin);
+        const okEmp = !filtros.empreendimentos.length || filtros.empreendimentos.includes(emp);
+        const okTim = !filtros.times.length || filtros.times.includes(tim);
+        const okImo = !filtros.imobiliarias.length || filtros.imobiliarias.includes(imo);
+        const okVia = !filtros.viabilizadores.length || filtros.viabilizadores.includes(via);
+        return okAno && okMes && okLin && okEmp && okTim && okImo && okVia;
+      });
+    }catch(e){ console.error('filtrarDados erro', e); return base||[]; }
+  }
+
+  // Guarda referências originais (se existirem)
+  const _aplicar = window.aplicarFiltros;
+  const _limpar  = window.limparFiltros;
+
+  // Sobrescreve aplicar: chama original e depois atualiza KPIs com base filtrada
+  window.aplicarFiltros = function(){
+    try{ if (typeof _aplicar === 'function') _aplicar(); }catch(e){ console.error(e); }
+    try{
+      const base = (typeof dadosOriginais!=='undefined') ? dadosOriginais : (window.dadosOriginais||[]);
+      const filtrados = filtrarDados(base);
+      if (typeof atualizarKpis === 'function') atualizarKpis(filtrados);
+    }catch(e){ console.error('patch aplicarFiltros', e); }
+  };
+
+  // Sobrescreve limpar: chama original e atualiza KPIs com base total
+  window.limparFiltros = function(){
+    try{ if (typeof _limpar === 'function') _limpar(); }catch(e){ console.error(e); }
+    try{
+      const base = (typeof dadosOriginais!=='undefined') ? dadosOriginais : (window.dadosOriginais||[]);
+      if (typeof atualizarKpis === 'function') atualizarKpis(base);
+    }catch(e){ console.error('patch limparFiltros', e); }
+  };
+
+  // Inicializa KPIs ao carregar
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      const base = (typeof dadosOriginais!=='undefined') ? dadosOriginais : (window.dadosOriginais||[]);
+      if (typeof atualizarKpis === 'function') atualizarKpis(base);
+    }catch(e){ console.error('init KPIs', e); }
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  const ORDEM_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  function ordenarMeses(){
+    const box = document.getElementById('dropdown-mes');
+    if (!box) return;
+    const items = Array.from(box.children);
+    items.sort((a,b)=>{
+      const va = a.querySelector('input')?.value || '';
+      const vb = b.querySelector('input')?.value || '';
+      return ORDEM_MESES.indexOf(va)-ORDEM_MESES.indexOf(vb);
+    });
+    items.forEach(it=> box.appendChild(it));
+  }
+  document.addEventListener('DOMContentLoaded', ordenarMeses);
+})();
+</script>
+
+</body>
+</html>
